@@ -1,0 +1,37 @@
+# Basa.id — uji lokal dengan PostgreSQL (cara termudah meniru produksi).
+#
+#   docker compose up --build -d db     # Postgres saja
+#   docker compose up --build bot       # bot tersambung ke Postgres lokal
+#
+# Telegram: export TELEGRAM_BOT_TOKEN=... dulu, atau set di file .env (compose
+# membaca .env otomatis).
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: basa
+      POSTGRES_PASSWORD: basa
+      POSTGRES_DB: basa
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U basa -d basa"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  bot:
+    build: .
+    environment:
+      PLATFORM: telegram
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      DATABASE_URL: postgresql+psycopg://basa:basa@db:5432/basa
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

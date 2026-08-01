@@ -1,0 +1,20 @@
+{
+  "language": { "code": "jv", "name": "Javanese" },
+  "source": "Kurasi manual (ngoko umum) — perlu divalidasi penutur asli sebelum dipublikasikan",
+  "license": "Karya sendiri (public domain)",
+  "imported_at": "2026-08-01",
+  "phrases": [
+    { "phrase": "Piye kabare?", "translation": "Bagaimana kabarmu?", "context": "greeting" },
+    { "phrase": "Aku apik-apik wae, matur nuwun.", "translation": "Aku baik-baik saja, terima kasih.", "context": "greeting" },
+    { "phrase": "Matur nuwun.", "translation": "Terima kasih.", "context": "politeness" },
+    { "phrase": "Nyuwun pangapunten.", "translation": "Mohon maaf.", "context": "politeness" },
+    { "phrase": "Aku arep mangan.", "translation": "Saya mau makan.", "context": "food" },
+    { "phrase": "Iki enak tenan!", "translation": "Ini enak sekali!", "context": "food" },
+    { "phrase": "Aku arep menyang pasar.", "translation": "Saya mau pergi ke pasar.", "context": "travel" },
+    { "phrase": "Pinten regane?", "translation": "Berapa harganya?", "context": "shopping" },
+    { "phrase": "Omahmu ana ngendi?", "translation": "Rumahmu di mana?", "context": "smalltalk" },
+    { "phrase": "Sugeng enjing!", "translation": "Selamat pagi!", "context": "greeting" },
+    { "phrase": "Sugeng ndalu.", "translation": "Selamat malam.", "context": "farewell" },
+    { "phrase": "Ayo bareng-bareng.", "translation": "Ayo bersama-sama.", "context": "smalltalk" }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "language": { "code": "bbc", "name": "Batak Toba" },
+  "source": "Kurasi manual (penutur & kamus daring) — perlu divalidasi penutur asli sebelum dipublikasikan",
+  "license": "Karya sendiri (public domain)",
+  "imported_at": "2026-08-01",
+  "grammar": [
+    {
+      "title": "Partikel penegas 'do'",
+      "explanation": "Partikel 'do' menegaskan kata yang mendahuluinya — setara 'lah/-nya' dalam penekanan.",
+      "example": "Au do na laho.",
+      "example_translation": "Sayalah yang pergi.",
+      "level": 1
+    },
+    {
+      "title": "Kata ganti orang",
+      "explanation": "au (saya), ho (kamu), ibana (dia), hita (kita), hamu (kalian), nasida (mereka).",
+      "example": "Ho do donganhu.",
+      "example_translation": "Kamulah temanku.",
+      "level": 1
+    },
+    {
+      "title": "Penanda kepemilikan -hu / -mu / -na",
+      "explanation": "Akhiran -hu (saya), -mu (kamu), -na (dia) dilekatkan pada kata benda.",
+      "example": "Inanghu di huta. Goarmu ise?",
+      "example_translation": "Ibuku di kampung. Siapa namamu?",
+      "level": 2
+    },
+    {
+      "title": "Kata tanya",
+      "explanation": "aha (apa), ise (siapa), didia (di mana), andigan (kapan), boasa (mengapa).",
+      "example": "Didia do ho?",
+      "example_translation": "Kamu di mana?",
+      "level": 1
+    },
+    {
+      "title": "Konjungsi 'molo' (kalau/jika)",
+      "explanation": "molo membuka klausa syarat — pola: [molo + syarat], [akibat].",
+      "example": "Molo ro ho, margogo au.",
+      "example_translation": "Kalau kamu datang, saya senang.",
+      "level": 2
+    },
+    {
+      "title": "Awalan ma-/man- untuk verba",
+      "explanation": "Banyak verba Batak Toba berawalan ma-/man- (mangan, manjaha, manurat).",
+      "example": "Mangan ma hita.",
+      "example_translation": "Mari kita makan.",
+      "level": 2
+    }
+  ]
+}

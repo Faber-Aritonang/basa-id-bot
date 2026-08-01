@@ -1,0 +1,20 @@
+{
+  "language": { "code": "bbc", "name": "Batak Toba" },
+  "source": "Kurasi manual (penutur & kamus daring) — perlu divalidasi penutur asli sebelum dipublikasikan",
+  "license": "Karya sendiri (public domain)",
+  "imported_at": "2026-08-01",
+  "phrases": [
+    { "phrase": "Horas!", "translation": "Halo / salam khas Batak (semoga selamat)", "context": "greeting" },
+    { "phrase": "Songon dia barita?", "translation": "Bagaimana kabarmu? (lit. bagaimana beritanya)", "context": "greeting" },
+    { "phrase": "Denggan do, mauliate.", "translation": "Baik, terima kasih.", "context": "greeting" },
+    { "phrase": "Mauliate ma di ho.", "translation": "Terima kasih kepadamu.", "context": "politeness" },
+    { "phrase": "Mangan ma hita.", "translation": "Mari kita makan.", "context": "food" },
+    { "phrase": "Tabo situtu indahan on!", "translation": "Makanan ini sangat enak!", "context": "food" },
+    { "phrase": "Laho au tu pasar.", "translation": "Saya pergi ke pasar.", "context": "travel" },
+    { "phrase": "Sadia argana?", "translation": "Berapa harganya?", "context": "shopping" },
+    { "phrase": "Didia do jabu mi?", "translation": "Di mana rumahmu?", "context": "smalltalk" },
+    { "phrase": "Sai horas ma ho!", "translation": "Semoga engkau selalu selamat! (salam perpisahan)", "context": "farewell" },
+    { "phrase": "Mulak ma hita tu huta.", "translation": "Mari kita pulang ke kampung.", "context": "travel" },
+    { "phrase": "Molo ro ho, margogo au.", "translation": "Kalau kamu datang, saya senang.", "context": "smalltalk" }
+  ]
+}

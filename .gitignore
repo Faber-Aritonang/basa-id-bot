@@ -1,0 +1,47 @@
+# --- Secrets (JANGAN pernah commit) ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# --- Database (dev local) ---
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+data/*.sqlite
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.python-version
+
+# --- Tooling / IDE ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# --- Test & coverage ---
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Aplikasi Freebuff (bukan bagian proyek) ---
+Freebuff-*.AppImage
+
+# --- File mentah impor data (bisa diunduh ulang via scripts/import_kaikki.py) ---
+data/*.jsonl

@@ -1,0 +1,36 @@
+# Secrets — jangan pernah masuk image
+.env
+.env.*
+*.pem
+*.key
+
+# Dev / tooling
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.coverage
+htmlcov
+.idea
+.vscode
+.DS_Store
+*.swp
+
+# Dokumen & test (tidak dibutuhkan di image runtime)
+docs
+tests
+scripts
+Freebuff-*.AppImage
+
+# Database lokal — image memakai data/ JSON + DATABASE_URL (Postgres)
+data/*.db
+data/*.sqlite
+*.db
+*.sqlite
+
+# Logs
+*.log

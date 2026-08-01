@@ -1,0 +1,50 @@
+{
+  "language": { "code": "su", "name": "Sundanese" },
+  "source": "Kurasi manual — perlu divalidasi penutur asli sebelum dipublikasikan",
+  "license": "Karya sendiri (public domain)",
+  "imported_at": "2026-08-01",
+  "grammar": [
+    {
+      "title": "Tingkat tutur: lemes vs loma",
+      "explanation": "Bahasa Sunda punya tingkat tutur. Lemes untuk sopan, loma untuk akrab. Kosa kata bisa berbeda.",
+      "example": "Abdi bade tuang. (lemes) → Urang arek dahar. (loma)",
+      "example_translation": "Saya mau makan.",
+      "level": 1
+    },
+    {
+      "title": "Kata ganti orang",
+      "explanation": "abdi/urang (saya), anjeun (kamu), manéhna (dia), urang (kita).",
+      "example": "Abdi teu acan tuang.",
+      "example_translation": "Saya belum makan.",
+      "level": 1
+    },
+    {
+      "title": "Partikel kepemilikan -na",
+      "explanation": "Akhiran -na (dia/itu) dilekatkan pada kata benda — setara '-nya'.",
+      "example": "Imahna di Bandung.",
+      "example_translation": "Rumahnya di Bandung.",
+      "level": 2
+    },
+    {
+      "title": "Negasi 'teu / henteu'",
+      "explanation": "teu/henteu = tidak. Diletakkan sebelum kata kerja/kata sifat.",
+      "example": "Abdi henteu terang.",
+      "example_translation": "Saya tidak tahu.",
+      "level": 1
+    },
+    {
+      "title": "Kata tanya",
+      "explanation": "kumaha (bagaimana), saha (siapa), sabaraha (berapa), di mana (di mana), iraha (kapan).",
+      "example": "Kumaha damang?",
+      "example_translation": "Bagaimana kabarmu?",
+      "level": 1
+    },
+    {
+      "title": "Partikel '-eun' (kata sifat keadaan)",
+      "explanation": "Akhiran -eun membentuk kata sifat keadaan yang dirasakan.",
+      "example": "tiris (dingin) → tiseun (dingin-dinginnya)",
+      "example_translation": "terasa dingin",
+      "level": 2
+    }
+  ]
+}

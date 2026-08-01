@@ -1,0 +1,50 @@
+{
+  "language": { "code": "jv", "name": "Javanese" },
+  "source": "Kurasi manual — perlu divalidasi penutur asli sebelum dipublikasikan",
+  "license": "Karya sendiri (public domain)",
+  "imported_at": "2026-08-01",
+  "grammar": [
+    {
+      "title": "Unggah-ungguh: ngoko vs krama",
+      "explanation": "Bahasa Jawa punya tingkat tutur. Ngoko untuk teman sebaya, krama untuk yang lebih tua/dihormati. Kosa kata bisa berbeda total.",
+      "example": "Aku arep mangan. (ngoko) → Kula badhe dhahar. (krama)",
+      "example_translation": "Saya mau makan.",
+      "level": 1
+    },
+    {
+      "title": "Kata ganti orang",
+      "explanation": "aku (saya), kowe (kamu, ngoko), sampeyan/panjenengan (kamu, krama), dheweke (dia), kita (kita).",
+      "example": "Aku apik-apik wae.",
+      "example_translation": "Aku baik-baik saja.",
+      "level": 1
+    },
+    {
+      "title": "Partikel kepemilikan -ku / -mu / -e",
+      "explanation": "Akhiran -ku (saya), -mu (kamu), -e (dia/itu) dilekatkan pada kata benda.",
+      "example": "Omahku cedhak pasar.",
+      "example_translation": "Rumahku dekat pasar.",
+      "level": 2
+    },
+    {
+      "title": "Negasi 'ora'",
+      "explanation": "ora = tidak (ngoko); boten = tidak (krama). Diletakkan sebelum kata kerja/kata sifat.",
+      "example": "Aku ora ngerti.",
+      "example_translation": "Aku tidak mengerti.",
+      "level": 1
+    },
+    {
+      "title": "Kata tanya",
+      "explanation": "piye (bagaimana), sapa (siapa), pira (berapa), neng ngendi (di mana), kapan (kapan).",
+      "example": "Piye kabare?",
+      "example_translation": "Bagaimana kabarmu?",
+      "level": 1
+    },
+    {
+      "title": "Akhiran -an (kata benda dari verba)",
+      "explanation": "Awalan/akhiran ma-/ng- dan -an membentuk kata benda hasil tindakan.",
+      "example": "mangan (makan) → panganan (makanan)",
+      "example_translation": "makanan",
+      "level": 2
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "language": { "code": "su", "name": "Sundanese" },
+  "source": "Kurasi manual — perlu divalidasi penutur asli sebelum dipublikasikan",
+  "license": "Karya sendiri (public domain)",
+  "imported_at": "2026-08-01",
+  "phrases": [
+    { "phrase": "Kumaha damang?", "translation": "Bagaimana kabarmu?", "context": "greeting" },
+    { "phrase": "Damang, hatur nuhun.", "translation": "Baik, terima kasih.", "context": "greeting" },
+    { "phrase": "Hatur nuhun.", "translation": "Terima kasih.", "context": "politeness" },
+    { "phrase": "Punten.", "translation": "Permisi / mohon maaf.", "context": "politeness" },
+    { "phrase": "Abdi bade tuang.", "translation": "Saya mau makan.", "context": "food" },
+    { "phrase": "Enya ngeunah pisan!", "translation": "Ya, enak sekali!", "context": "food" },
+    { "phrase": "Abdi bade ka pasar.", "translation": "Saya mau ke pasar.", "context": "travel" },
+    { "phrase": "Sabaraha hargana?", "translation": "Berapa harganya?", "context": "shopping" },
+    { "phrase": "Imah anjeun di mana?", "translation": "Rumahmu di mana?", "context": "smalltalk" },
+    { "phrase": "Wilujeng enjing!", "translation": "Selamat pagi!", "context": "greeting" },
+    { "phrase": "Wilujeng wengi.", "translation": "Selamat malam.", "context": "farewell" },
+    { "phrase": "Hayu babarengan.", "translation": "Ayo bersama-sama.", "context": "smalltalk" }
+  ]
+}
