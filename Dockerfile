@@ -17,6 +17,9 @@ COPY data ./data
 COPY migrations ./migrations
 COPY alembic.ini ./
 
-# Jalankan bot. Platform & kredensial via env saat run:
+# Jalankan migrasi + seed (idempoten), lalu bot.
+# Perintah start ada di sini (bukan render.yaml) karena Render melarang
+# `startCommand` pada service dengan `runtime: docker`.
+# Platform & kredensial via env saat run:
 #   PLATFORM=telegram|whatsapp, TELEGRAM_BOT_TOKEN, DATABASE_URL, dll.
-CMD ["basa", "run"]
+CMD ["bash", "-c", "basa db upgrade && basa db seed && basa run"]

@@ -6,8 +6,8 @@
 # Blueprint ini membuat:
 #   - 1 PostgreSQL (plan free) bernama `basa-db`
 #   - 1 Web Service (Docker, plan free) bernama `basa-bot`
-#     yang menjalankan `basa db upgrade && basa db seed && basa run`
-#     (migrasi + seed idempoten, lalu bot mulai polling Telegram).
+#     yang menjalankan migrasi + seed + bot (lihat CMD di Dockerfile;
+#     Render melarang `startCommand` pada service runtime: docker).
 #
 # Setelah blueprint dibuat, Render MEMINTA Anda mengisi nilai rahasia
 # (TELEGRAM_BOT_TOKEN) di dashboard — token tidak boleh ada di git.
@@ -27,8 +27,8 @@ services:
     # Health check: aplikasi bind ke $PORT (Render menyuntikkannya) dan
     # menjawab 200 di / dan /healthz — lihat src/basa/health.py.
     healthCheckPath: /
-    # Render membangun Dockerfile sendiri (auto-detect di root repo).
-    startCommand: bash -c "basa db upgrade && basa db seed && basa run"
+    # Perintah start (migrate + seed + run) ada di CMD Dockerfile — Render
+    # membangun Dockerfile sendiri (auto-detect di root repo).
     envVars:
       - key: PLATFORM
         value: telegram
