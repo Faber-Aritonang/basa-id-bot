@@ -45,7 +45,7 @@ Bot pembelajaran bahasa daerah Indonesia (**Batak Toba**, **Jawa**, **Sunda**) y
 
 ```bash
 # 1. Clone & masuk
-git clone https://github.com/<username>/basa-id-bot.git
+git clone https://github.com/Faber-Aritonang/basa-id-bot.git
 cd basa-id-bot
 
 # 2. Virtual env & install
