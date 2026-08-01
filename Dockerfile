@@ -7,6 +7,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Root proyek untuk CLI (migrasi/seed). Di image, paket terpasang di
+# site-packages sehingga lokasi modul tidak bisa dipakai untuk menemukan
+# folder migrations/ — tunjuk eksplisit ke /app.
+ENV BASA_PROJECT_ROOT=/app
+
 # Install package + dependensi (termasuk driver Postgres via extra 'postgres')
 COPY pyproject.toml README.md ./
 COPY src ./src

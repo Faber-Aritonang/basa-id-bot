@@ -7,6 +7,7 @@ Membungkus Alembic supaya migrasi bisa dijalankan lewat CLI aplikasi:
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import typer
@@ -17,8 +18,41 @@ from basa.db.engine import get_session_factory, init_db
 
 app = typer.Typer(help="Perintah database", no_args_is_help=True)
 
-# cli.py berada di src/basa/db/ → parents[3] = root proyek
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+def _find_project_root() -> Path:
+    """Lokasi root proyek (folder berisi alembic.ini + migrations/).
+
+    Hardcode `parents[3]` hanya benar saat paket dipasang editable
+    (src/basa/db/cli.py). Di image Docker paket di-copy ke site-packages
+    sehingga `__file__` ada di /usr/local/lib/... — root harus dicari.
+
+    Urutan prioritas:
+      1. env BASA_PROJECT_ROOT (di-set Dockerfile → /app)
+      2. naik dari lokasi modul sampai menemukan alembic.ini + migrations/
+      3. CWD (dev lokal: root repo)
+    """
+    if env_root := os.environ.get("BASA_PROJECT_ROOT"):
+        candidate = Path(env_root).resolve()
+        if (candidate / "alembic.ini").is_file() and (candidate / "migrations").is_dir():
+            return candidate
+
+    # Naik dari lokasi modul (mencakup editable install: src/basa/db/ → root).
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "alembic.ini").is_file() and (parent / "migrations").is_dir():
+            return parent
+
+    # Fallback: direktori kerja (dev menjalankan CLI dari root repo).
+    cwd = Path.cwd()
+    if (cwd / "alembic.ini").is_file() and (cwd / "migrations").is_dir():
+        return cwd
+
+    raise RuntimeError(
+        "Tidak menemukan folder proyek (alembic.ini + migrations/). "
+        "Set env BASA_PROJECT_ROOT ke root repo."
+    )
+
+
+_PROJECT_ROOT = _find_project_root()
 _MIGRATIONS_DIR = _PROJECT_ROOT / "migrations"
 _ALEMBIC_INI = _PROJECT_ROOT / "alembic.ini"
 
