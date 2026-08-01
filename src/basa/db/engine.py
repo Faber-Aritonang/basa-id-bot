@@ -28,12 +28,33 @@ def _prepare_sqlite_path(url: str) -> str:
     return url
 
 
+def _normalize_postgres_url(url: str) -> str:
+    """Pastikan URL PostgreSQL memakai driver psycopg3 (yang terpasang).
+
+    Hosting seperti Render menyuntikkan `DATABASE_URL` tanpa driver eksplisit
+    (mis. `postgres://...` atau `postgresql://...`), sedangkan SQLAlchemy 2.0
+    default ke driver psycopg2 untuk URL tanpa driver — yang TIDAK terpasang
+    di proyek ini (hanya `psycopg[binary]`/psycopg3 lewat extra `postgres`).
+    Tanpa normalisasi, koneksi DB pertama di Render langsung gagal.
+    """
+    if url.startswith("postgresql+psycopg://"):
+        return url
+    if url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + url[len("postgresql://") :]
+    if url.startswith("postgres://"):
+        return "postgresql+psycopg://" + url[len("postgres://") :]
+    return url
+
+
 def create_db_engine(url: str | None = None, *, echo: bool = False, poolclass: Any = None) -> Engine:
     """Buat engine baru. Default: dari env `DATABASE_URL`.
 
     `poolclass` bisa di-set (mis. StaticPool) untuk database in-memory di test.
     """
     resolved = _prepare_sqlite_path(url or get_settings().database_url)
+    # Render/Railway menyuntikkan URL Postgres tanpa driver — normalisasi dulu
+    # agar selalu memakai psycopg3 (satu-satunya driver yang terpasang).
+    resolved = _normalize_postgres_url(resolved)
     kwargs: dict[str, Any] = {"echo": echo}
     if resolved.startswith("sqlite"):
         kwargs["connect_args"] = {"check_same_thread": False}

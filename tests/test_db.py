@@ -5,7 +5,7 @@ from sqlalchemy import StaticPool, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from basa.db import models  # noqa: F401  # daftarkan model
-from basa.db.engine import Base, create_db_engine
+from basa.db.engine import Base, _normalize_postgres_url, create_db_engine
 from basa.db.models import Language, Platform, ProgressStatus, Word
 from basa.db.repositories import (
     LanguageRepository,
@@ -47,6 +47,30 @@ def seeded(session: Session) -> int:
 def test_engine_from_settings_default():
     engine = create_db_engine()
     assert engine.dialect.name == "sqlite"
+
+
+def test_normalize_postgres_url_adds_psycopg_driver():
+    """URL Postgres tanpa driver (gaya Render) dinormalisasi ke psycopg3."""
+    assert (
+        _normalize_postgres_url("postgres://u:p@host:5432/db")
+        == "postgresql+psycopg://u:p@host:5432/db"
+    )
+    assert (
+        _normalize_postgres_url("postgresql://u:p@host:5432/db")
+        == "postgresql+psycopg://u:p@host:5432/db"
+    )
+
+
+def test_normalize_postgres_url_keeps_existing_driver_and_sqlite():
+    """URL yang sudah ber-driver dan SQLite tidak diubah."""
+    assert (
+        _normalize_postgres_url("postgresql+psycopg://u:p@host:5432/db")
+        == "postgresql+psycopg://u:p@host:5432/db"
+    )
+    assert (
+        _normalize_postgres_url("sqlite:///data/basa.db")
+        == "sqlite:///data/basa.db"
+    )
 
 
 def test_get_or_create_user(session: Session):

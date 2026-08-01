@@ -74,9 +74,49 @@ Keduanya bisa *zero-config* (auto-detect Python) atau memakai `Dockerfile`
 
 ### Render
 
-1. **New → Web Service** → pilih repo → *Environment: Docker*.
-2. Tambah variabel env yang sama seperti di atas + *Instance Type* gratis.
-3. Deploy.
+Repo ini menyediakan **`render.yaml`** (blueprint): satu klik membuat PostgreSQL
++ Web Service Docker yang langsung migrate + seed + menjalankan bot.
+
+**Health check penting:** Render Web Service mengharuskan proses bind ke `$PORT`
+dan merespons HTTP, kalau tidak deploy dianggap gagal. Bot Telegram memakai
+*long polling* (tanpa HTTP), jadi aplikasi menjalankan *health server* minimal
+di thread sampingan (`src/basa/health.py`) yang menjawab `200` di `/` dan
+`/healthz` — aktif otomatis saat env `PORT` ter-set (Render menyuntikkannya).
+
+**Deploy (dashboard):**
+
+1. [dashboard.render.com](https://dashboard.render.com) → **New → Blueprint**
+   → pilih repo `Faber-Aritonang/basa-id-bot`.
+2. Render membaca `render.yaml`: buat database `basa-db` (free) + service
+   `basa-bot` (Docker, free).
+3. **Isi rahasia**: Render meminta nilai `TELEGRAM_BOT_TOKEN` (sync: false —
+   token tidak pernah ada di git). `DATABASE_URL` diisi otomatis dari database.
+4. Klik **Apply** → Render membangun image (Dockerfile) lalu deploy.
+
+   Start command otomatis: `basa db upgrade && basa db seed && basa run`
+   (migrasi + seed idempoten, lalu bot mulai polling).
+
+**Deploy (CLI, opsional):** butuh `render` CLI + API key:
+
+```bash
+pip install render-cli
+render blueprint launch --repo Faber-Aritonang/basa-id-bot
+```
+
+**Catatan free tier:** Web Service free turun (sleep) setelah ±15 menit tanpa
+trafik masuk, dan polling Telegram tidak menghasilkan trafik HTTP — bot akan
+"tertidur" dan baru bangun (30–50 dtk) saat ada pesan masuk berikutnya.
+Untuk bot 24/7 tanpa jeda, upgrade service ke plan *Starter* (atau aktifkan
+pada *paid instance type*). Database Postgres free di Render juga **berakhir
+otomatis setelah 30 hari** — upgrade ke *Starter* untuk data permanen.
+
+> **Driver Postgres:** Render menyuntikkan `DATABASE_URL` tanpa driver
+> (`postgres://...`), sedangkan proyek ini memakai psycopg3. Aplikasi
+> otomatis menormalisasi URL ke `postgresql+psycopg://` di `create_db_engine`
+> — tidak perlu konfigurasi tambahan.
+
+**Verifikasi:** buka `https://<service>.onrender.com/healthz` → harus
+membalas `ok` (health server berjalan).
 
 ## 4. Docker (opsional, lokal & produksi)
 

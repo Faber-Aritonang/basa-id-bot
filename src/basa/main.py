@@ -9,12 +9,14 @@ Contoh:
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 
 import typer
 
 from basa.config import get_settings
 from basa.db.cli import app as db_app, run_migrations
+from basa.health import start_health_server
 from basa.platforms import get_adapter
 
 app = typer.Typer(name="basa", help="Basa.id — belajar bahasa daerah Indonesia via bot.")
@@ -76,6 +78,15 @@ def run(platform: str | None = None, seed_if_empty: bool = True) -> None:
     _setup_logging(settings.log_level)
     if seed_if_empty and settings.database_url.startswith("sqlite"):
         _seed_if_empty()
+
+    # Hosting (Render/Railway) menyuntikkan $PORT dan mengharuskan proses
+    # bind ke port itu untuk health check — jalankan health server di thread
+    # sampingan sambil adapter (polling/webhook) berjalan di thread utama.
+    if raw_port := os.environ.get("PORT"):
+        try:
+            start_health_server(int(raw_port))
+        except ValueError:
+            log.warning("PORT tidak valid ('%s') — health server dilewati.", raw_port)
 
     adapter = get_adapter(target)
     log.info("Basa.id v%s — platform '%s'. Tekan Ctrl+C untuk berhenti.", "0.1.0", target)
