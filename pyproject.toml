@@ -27,6 +27,11 @@ dependencies = [
     "typer>=0.12",
 ]
 
+[project.urls]
+Homepage = "https://github.com/Faber-Aritonang/basa-id-bot"
+Repository = "https://github.com/Faber-Aritonang/basa-id-bot"
+Documentation = "https://github.com/Faber-Aritonang/basa-id-bot/blob/main/README.md"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
