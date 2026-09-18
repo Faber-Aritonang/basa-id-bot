@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from basa.core.llm import LLMClient
 from basa.core.messages import BotReply, UserMessage
 from basa.core.services.conversation import ConversationService
+from basa.core.services.dialogue import DialogueService
 from basa.core.services.grammar import GrammarService
 from basa.core.services.quiz import QuizService
 from basa.core.services.tutor import TutorService
@@ -85,6 +86,8 @@ class Router:
                 reply = GrammarService(session).random_rule(args or "jawa")
             elif command == "obrolan":
                 reply = self._handle_obrolan(args, message.user_id, platform, session)
+            elif command == "percakapan":
+                reply = self._handle_percakapan(args, session)
             else:
                 reply = BotReply(f"Perintah '/{command}' belum dikenal. Ketik /help untuk daftar.")
 
@@ -120,6 +123,24 @@ class Router:
             user_id=user_id,
             platform=platform,
         )
+
+    def _handle_percakapan(
+        self,
+        args: str,
+        session: Session,
+    ) -> BotReply:
+        """Dispatch ``/percakapan <bahasa>`` ke DialogueService (RAG + LLM).
+
+        Men-generate SATU dialog tanya-jawab 2 orang (A & B) yang grounded
+        di data kurasi. Tiap panggilan menghasilkan dialog baru.
+        """
+        if self._llm_client is None:
+            return BotReply(
+                "Fitur /percakapan butuh kunci API LLM. Isi LLM_API_KEY di .env "
+                "(lihat .env.example) — dapat key gratis di aistudio.google.com."
+            )
+        alias = (args or "").strip() or "jawa"
+        return DialogueService(session, self._llm_client).generate(alias=alias)
 
 
 def _parse_platform(raw: str) -> Platform:

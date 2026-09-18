@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # https://aistudio.google.com (tanpa kartu kredit).
     llm_provider: str = "mock"
     llm_api_key: str = ""
-    llm_model: str = "gemini-2.0-flash"
+    llm_model: str = "gemini-flash-lite-latest"
 
     # Logging
     log_level: str = "INFO"

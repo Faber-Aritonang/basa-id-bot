@@ -51,6 +51,7 @@ class VocabularyService:
             "  /progres          → statistik belajarmu\n"
             "  /kuis <bahasa>    → kuis interaktif 5 soal\n"
             "  /obrolan <bahasa> → latihan percakapan dengan tutor AI\n"
+            "  /percakapan <bahasa> → contoh dialog tanya-jawab 2 orang (A & B)\n"
             "  /help             → bantuan ini\n\n"
             "Contoh: /kata sunda, /frase batak, /grammar jawa, /kuasai mangan"
         )
