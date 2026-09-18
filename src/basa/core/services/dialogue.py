@@ -8,6 +8,8 @@ sama setiap kali, beda dari /frase yang membaca frasa statis.
 
 from __future__ import annotations
 
+import random
+
 from sqlalchemy.orm import Session
 
 from basa.core.languages import resolve_code
@@ -26,27 +28,69 @@ _RAG_WORD_COUNT = 6
 _RAG_PHRASE_COUNT = 5
 _RAG_GRAMMAR_COUNT = 1
 
-#: Batas token output untuk dialog (cukup untuk 4-6 baris + rangkuman).
-_MAX_TOKENS = 600
-#: Temperature sedikit lebih tinggi dari tutor → dialog bervariasi antar panggilan.
+#: Batas token output untuk dialog. 3-5 tanya-jawab (6-10 baris) + terjemahan
+#: + baris Tema + baris Materi butuh ruang lebih besar dari tutor singkat.
+_MAX_TOKENS = 1000
+#: Temperature moderat — cukup variasi antar panggilan, tapi cukup patuh
+#: aturan struktur (jumlah baris, format).
 _TEMPERATURE = 0.6
+
+#: Daftar tema percakapan sehari-hari. Dipilih acak tiap panggilan supaya
+#: tiap /percakapan menghasilkan dialog yang berbeda konteksnya, bukan cuma
+#: beda kalimat. Tema juga diteruskan ke LLM lewat system + user prompt.
+_THEMES: tuple[str, ...] = (
+    "Sapaan & perkenalan dua orang yang baru bertemu",
+    "Bertemu teman lama di jalan",
+    "Membeli buah di pasar",
+    "Memesan makanan di warung",
+    "Bertanya arah jalan ke penduduk lokal",
+    "Mengundang teman makan bareng",
+    "Berbincang tentang keluarga (berapa anak, dari mana)",
+    "Menyampaikan undangan pesta pernikahan",
+    "Bertanya kabar orang sakit",
+    "Bicara tentang cuaca & musim panen",
+    "Menanyakan jadwal bus/kereta ke kota sebelah",
+    "Memuji hidangan tuan rumah saat berkunjung",
+)
 
 _SYSTEM_PROMPT_TEMPLATE = (
     "Kamu adalah penulis dialog bahasa daerah di bot Basa.id.\n"
-    "Tugas: buatkan SATU dialog tanya-jawab singkat (4-6 baris) antara dua "
-    "orang, A dan B, dalam bahasa {language_name}.\n"
+    "Tugas: buatkan SATU dialog tanya-jawab antara dua orang, A dan B, dalam "
+    "bahasa {language_name}, dengan TEMA: {theme}.\n"
     "Aturan MUTLAK:\n"
-    "1. HANYA gunakan kosakata, frasa, dan aturan grammar dari blok CONTEXT. "
+    "1. Dialog HARUS terdiri dari MINIMAL 3 dan MAKSIMAL 5 kali tanya-jawab. "
+    "Satu tanya-jawab = 1 baris A + 1 baris B (sepasang). Jadi total HARUS "
+    "GENAP: 6, 8, atau 10 baris A/B. JANGAN berhenti di 5 atau 7 baris. "
+    "Contoh struktur yang BENAR (3 tanya-jawab = 6 baris):\n"
+    "   A: ... (...)\n"
+    "   B: ... (...)\n"
+    "   A: ... (...)\n"
+    "   B: ... (...)\n"
+    "   A: ... (...)\n"
+    "   B: ... (...)\n"
+    "   -> berakhir pada baris B.\n"
+    "2. HANYA gunakan kosakata, frasa, dan aturan grammar dari blok CONTEXT. "
     "JANGAN mengarang kata/frasa bahasa daerah sendiri.\n"
-    "2. Tiap baris pakai format: 'A: <kalimat bahasa daerah> "
+    "3. Tiap baris pakai format: 'A: <kalimat bahasa daerah> "
     "(<terjemahan Indonesia>)' atau 'B: ...'.\n"
-    "3. Susun alami: sapaan -> pertanyaan -> jawaban -> tanggapan.\n"
-    "4. Gunakan minimal 2 frasa/kata dari CONTEXT.\n"
-    "5. Jika CONTEXT tidak cukup untuk dialog, katakan jujur 'Maaf, materi "
-    "belum cukup untuk dialog lengkap.' dan sarankan /kata atau /frase.\n"
-    "6. Setelah dialog, tambahkan satu baris kosong lalu baris rangkuman: "
-    "'Materi: <daftar kata/frasa yang dipakai>'.\n"
-    "Konteks: user meminta contoh percakapan bahasa {language_name}."
+    "4. TEMA adalah SETTING/RANGKA saja, BUKAN syarat kosakata. Susun dialog "
+    "mengikuti tema selama mungkin, tapi prioritas UTAMA adalah memakai kata/"
+    "frasa dari CONTEXT. Bila kata spesifik untuk tema tidak ada di CONTEXT, "
+    "SEDERHANAKAN temanya agar cocok dengan kosakata yang tersedia (mis. tema "
+    "'membeli buah di pasar' -> cukup dialog sapaan + tanya kabar + sebut "
+    "makanan/harga memakai kata yang ADA) — JANGAN menolak membuat dialog.\n"
+    "5. Gunakan minimal 2 frasa/kata dari CONTEXT.\n"
+    "6. Susun alami: sapaan -> inti percakapan -> penutup/salam.\n"
+    "7. HANYA boleh menolak ('Maaf, materi belum cukup...') jika CONTEXT "
+    "berisi kurang dari 2 item total. Selama CONTEXT ada >= 2 item, WAJIB "
+    "produksi dialog penuh sesuai aturan di atas.\n"
+    "8. Baris PALING ATAS wajib: 'Tema: <ringkasan singkat temanya, boleh "
+    "disesuaikan ke versi yang cocok dengan CONTEXT>'. Setelah itu baris "
+    "kosong, lalu dialog A/B.\n"
+    "9. Setelah dialog selesai, tambahkan satu baris kosong lalu baris "
+    "rangkuman: 'Materi: <daftar kata/frasa dari CONTEXT yang dipakai>'.\n"
+    "Konteks: user meminta contoh percakapan bahasa {language_name} dengan "
+    "tema '{theme}'."
 )
 
 
@@ -88,8 +132,11 @@ class DialogueService:
                 "Jalankan `basa db seed` dulu ya sebelum /percakapan."
             )
 
-        system = _SYSTEM_PROMPT_TEMPLATE.format(language_name=language.name)
-        user = self._build_user_prompt(context)
+        theme = random.choice(_THEMES)
+        system = _SYSTEM_PROMPT_TEMPLATE.format(
+            language_name=language.name, theme=theme
+        )
+        user = self._build_user_prompt(context, theme)
         try:
             reply_text = self.llm.chat(
                 system, user, max_tokens=_MAX_TOKENS, temperature=_TEMPERATURE
@@ -131,8 +178,8 @@ class DialogueService:
         }
 
     @staticmethod
-    def _build_user_prompt(context: dict) -> str:
-        """Susun prompt user: blok CONTEXT + permintaan generate dialog."""
+    def _build_user_prompt(context: dict, theme: str) -> str:
+        """Susun prompt user: blok CONTEXT + tema + permintaan generate dialog."""
         lines: list[str] = ["=== CONTEXT (data resmi dari DB Basa.id) ==="]
         if context["words"]:
             lines.append("Kosakata:")
@@ -145,8 +192,12 @@ class DialogueService:
             lines.extend(f"  - {g}" for g in context["grammar"])
         lines.append("=== END CONTEXT ===")
         lines.append("")
+        lines.append(f"Tema percakapan yang harus diangkat: {theme}")
+        lines.append("")
         lines.append(
-            "Pesan user: buatkan satu contoh dialog tanya-jawab 2 orang "
-            "(A & B) memakai CONTEXT di atas."
+            "Pesan user: buatkan satu contoh dialog tanya-jawab (MIN 3, MAKS 5 "
+            "kali tanya-jawab) antara 2 orang (A & B) memakai CONTEXT di atas "
+            "dan sesuai tema. Baris pertama wajib 'Tema: ...', baris terakhir "
+            "wajib 'Materi: ...'."
         )
         return "\n".join(lines)

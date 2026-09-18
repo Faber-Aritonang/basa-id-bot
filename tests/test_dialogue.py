@@ -86,6 +86,24 @@ def test_percakapan_uses_rag_context(session_factory, mock_llm):
     assert "horas" in reply.text.lower()
 
 
+def test_percakapan_injects_theme(session_factory, mock_llm):
+    """Tema harian harus disuntikkan ke prompt -> terlihat di balasan mock."""
+    with session_factory() as session:
+        svc = DialogueService(session, mock_llm)
+        reply = svc.generate(alias="batak")
+    lower = reply.text.lower()
+    assert "tema" in lower  # baris 'Tema percakapan yang harus diangkat:'
+
+
+def test_percakapan_prompt_requires_3_to_5_exchanges(session_factory, mock_llm):
+    """System/user prompt wajib menyebut minimal 3 & maksimal 5 tanya-jawab."""
+    with session_factory() as session:
+        svc = DialogueService(session, mock_llm)
+        reply = svc.generate(alias="batak")
+    lower = reply.text.lower()
+    assert "min 3" in lower and "maks 5" in lower
+
+
 def test_percakapan_empty_language_returns_hint():
     """Bahasa tanpa materi -> pesan jelas (bukan crash)."""
     engine = create_engine(
