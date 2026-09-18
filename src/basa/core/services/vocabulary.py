@@ -50,6 +50,7 @@ class VocabularyService:
             "  /kuasai <kata>    → tandai kata yang sudah dikuasai\n"
             "  /progres          → statistik belajarmu\n"
             "  /kuis <bahasa>    → kuis interaktif 5 soal\n"
+            "  /obrolan <bahasa> → latihan percakapan dengan tutor AI\n"
             "  /help             → bantuan ini\n\n"
             "Contoh: /kata sunda, /frase batak, /grammar jawa, /kuasai mangan"
         )

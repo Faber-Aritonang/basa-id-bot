@@ -15,8 +15,10 @@ from pathlib import Path
 import typer
 
 from basa.config import get_settings
+from basa.core.router import Router
 from basa.db.cli import app as db_app, run_migrations
 from basa.health import start_health_server
+from basa.llm import get_llm_client
 from basa.platforms import get_adapter
 
 app = typer.Typer(name="basa", help="Basa.id — belajar bahasa daerah Indonesia via bot.")
@@ -88,8 +90,18 @@ def run(platform: str | None = None, seed_if_empty: bool = True) -> None:
         except ValueError:
             log.warning("PORT tidak valid ('%s') — health server dilewati.", raw_port)
 
-    adapter = get_adapter(target)
-    log.info("Basa.id v%s — platform '%s'. Tekan Ctrl+C untuk berhenti.", "0.1.0", target)
+    # Bangun LLM client (mock jika tanpa API key, gemini jika kredensial ada)
+    # lalu Router dengan LLM ter-inject — adapter hanya menerima router,
+    # sehingga fitur /obrolan langsung aktif di Telegram/WhatsApp/console.
+    llm_client = get_llm_client(settings)
+    router = Router(llm_client=llm_client)
+    adapter = get_adapter(target, router=router)
+    log.info(
+        "Basa.id v%s — platform '%s', LLM '%s'. Tekan Ctrl+C untuk berhenti.",
+        "0.1.0",
+        target,
+        llm_client.name,
+    )
     adapter.start()
 
 

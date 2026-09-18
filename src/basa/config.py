@@ -35,6 +35,13 @@ class Settings(BaseSettings):
     whatsapp_verify_token: str = ""
     whatsapp_webhook_port: int = 8080
 
+    # LLM (fitur /obrolan) — default mock (jalan tanpa API key).
+    # Provider "gemini" pakai Google AI Studio free tier; key gratis di
+    # https://aistudio.google.com (tanpa kartu kredit).
+    llm_provider: str = "mock"
+    llm_api_key: str = ""
+    llm_model: str = "gemini-2.0-flash"
+
     # Logging
     log_level: str = "INFO"
 
@@ -42,6 +49,11 @@ class Settings(BaseSettings):
     def supported_platforms(self) -> list[str]:
         """Daftar platform yang sudah ada adapter-nya."""
         return ["console", "telegram", "whatsapp"]
+
+    @property
+    def supported_llm_providers(self) -> list[str]:
+        """Daftar provider LLM yang sudah ada adapter-nya."""
+        return ["mock", "gemini"]
 
 
 @lru_cache

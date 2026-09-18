@@ -9,6 +9,7 @@ from basa.core.router import Router
 from basa.db.engine import Base
 from basa.db.models import Word
 from basa.db.repositories import LanguageRepository, WordRepository
+from basa.llm.mock_adapter import MockLLMClient
 
 
 @pytest.fixture()
@@ -134,3 +135,58 @@ def test_word_lookup_repository_language_scoped():
         # tanpa language_id → mengembalikan yang pertama
         any_word = repo.get_by_term("mangan")
         assert any_word is not None
+
+
+# ---------------------------------------------------------------------------
+# /obrolan — integrasi LLM (Fase 1)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def router_with_llm() -> Router:
+    """Router dengan MockLLMClient (untuk /obrolan). DB in-memory sama dengan `router`."""
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+    factory = sessionmaker(bind=engine, expire_on_commit=False)
+    with factory() as session:
+        lang = LanguageRepository(session).get_or_create("jv", "Javanese")
+        session.add_all(
+            [
+                Word(
+                    language_id=lang.id,
+                    term="sun",
+                    translation="a kiss",
+                    part_of_speech="noun",
+                    example="Sun ati",
+                    example_translation="Ciuman sayang",
+                ),
+                Word(language_id=lang.id, term="mangan", translation="to eat", part_of_speech="verb"),
+            ]
+        )
+        bbc = LanguageRepository(session).get_or_create("bbc", "Batak Toba")
+        session.add(Word(language_id=bbc.id, term="horas", translation="salam", part_of_speech="interjection"))
+        session.commit()
+    return Router(session_factory=factory, llm_client=MockLLMClient())
+
+
+def test_obrolan_dispatch(router_with_llm: Router):
+    reply = router_with_llm.handle(UserMessage(user_id="u1", text="/obrolan batak halo"))
+    assert reply.text
+    assert "Mode mock" in reply.text  # LLM terpanggil (bukan handler statis)
+
+
+def test_obrolan_in_help(router: Router):
+    """Help text harus menyebutkan /obrolan."""
+    reply = router.handle(UserMessage(user_id="u1", text="/help"))
+    assert "/obrolan" in reply.text
+
+
+def test_obrolan_without_llm_client_graceful(router: Router):
+    """Router tanpa llm_client → /obrolan menolak dengan pesan jelas (bukan crash)."""
+    # fixture `router` membangun Router() tanpa llm_client → _llm_client None.
+    reply = router.handle(UserMessage(user_id="u1", text="/obrolan batak halo"))
+    assert "LLM" in reply.text or "API key" in reply.text

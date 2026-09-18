@@ -41,6 +41,11 @@ dev = [
 postgres = [
     "psycopg[binary]>=3.1",
 ]
+# Provider Gemini (Google AI Studio) — wajib saat LLM_PROVIDER=gemini.
+# Tanpa extra ini, factory fallback ke MockLLMClient (basa run tetap jalan).
+llm = [
+    "google-generativeai>=0.7",
+]
 
 [project.scripts]
 basa = "basa.main:app"
