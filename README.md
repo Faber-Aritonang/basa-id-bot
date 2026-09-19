@@ -16,6 +16,7 @@ Bot pembelajaran bahasa daerah Indonesia (**Batak Toba**, **Jawa**, **Sunda**) y
 | 2 | **Percakapan harian** | `/frase <bahasa>` | Frasa nyata per konteks (sapaan, makanan, perjalanan…) |
 | 3 | **Grammar** | `/grammar <bahasa>` | Aturan dasar + contoh (partikel, tingkat tutur, negasi…) |
 | 4 | **Kuis interaktif** | `/kuis <bahasa>` | 5 soal pilihan ganda, skor tersimpan, bisa dijawab via tombol **atau** ketik angka |
+| 5 | **Percakapan dengan LLM** | `/percakapan <bahasa>` | Dialog 3–5 tanya-jawab berbasis RAG, tema harian, terjemahan, dan daftar materi |
 | — | **Pelacakan progres** | `/progres` | Kosakata dilihat / dikuasai, skor kuis — per user per platform |
 
 **Bahasa yang didukung:** `batak` (ISO `bbc` — kurasi manual), `jawa` (`jv`), `sunda` (`su`) — impor dari Kaikki.org (Wiktionary). Menambah bahasa baru = menambah folder data, **tanpa ubah kode inti**.
@@ -39,7 +40,44 @@ Bot pembelajaran bahasa daerah Indonesia (**Batak Toba**, **Jawa**, **Sunda**) y
 - **Satu core, banyak platform** — logika bisnis di `src/basa/core/` murni, tidak pernah menyentuh SDK Telegram/WhatsApp.
 - **Adapter tipis** (`src/basa/platforms/`) — hanya menerjemahkan pesan masuk/keluar. Telegram, WhatsApp, dan console memakai core yang sama persis.
 - **Database agnostik** — SQLAlchemy 2.0 + Alembic. SQLite untuk dev lokal; ke PostgreSQL cukup ganti `DATABASE_URL` (lihat [DEPLOYMENT.md](docs/DEPLOYMENT.md)).
-- **Aman dari awal** — semua token lewat `.env` (di-`.gitignore`); template di [`.env.example`](.env.example).
+- **Aman dari awal** — semua token lewat `.env` (di-`.gitignore`); template di [`.env.example`](.env.example). API key Gemini dikirim melalui header, bukan query URL.
+- **LLM berlapis** — Gemini menjadi provider utama; jika quota, rate limit, timeout, atau error provider terjadi, request diteruskan ke Bynara/NaraRouter dengan model `agnes-2.5-flash`.
+
+## 🤖 LLM dan fallback provider
+
+Fitur `/percakapan` memakai arsitektur adapter sehingga core tidak bergantung pada SDK provider tertentu:
+
+```text
+Gemini (primary)
+      │ berhasil
+      ▼
+  BotReply
+      │ error / quota / rate limit / timeout
+      ▼
+Bynara — agnes-2.5-flash (fallback)
+      │ gagal juga
+      ▼
+Pesan error yang aman
+```
+
+Bynara diakses melalui endpoint OpenAI-compatible menggunakan dependency `httpx`. Konfigurasi lokal:
+
+```env
+# Primary
+LLM_PROVIDER=gemini
+LLM_API_KEY=TOKEN_GEMINI
+LLM_MODEL=gemini-flash-lite-latest
+
+# Fallback pay-as-you-go
+LLM_FALLBACK_PROVIDER=bynara
+LLM_FALLBACK_API_KEY=TOKEN_BYNARA
+LLM_FALLBACK_MODEL=agnes-2.5-flash
+LLM_FALLBACK_BASE_URL=https://router.bynara.id/v1
+```
+
+`LLM_API_KEY` dan `LLM_FALLBACK_API_KEY` harus berisi token yang berbeda. Jangan pernah menaruh token di README, source code, screenshot, URL, atau commit. File `.env` sudah diabaikan oleh Git.
+
+Jika kedua provider tidak dikonfigurasi, aplikasi tetap dapat dijalankan menggunakan `MockLLMClient` untuk demo dan testing.
 
 ## 🚀 Quick Start (lokal)
 
@@ -51,7 +89,7 @@ cd basa-id-bot
 # 2. Virtual env & install
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -e '.[dev]'
+python -m pip install -e '.[dev]'
 
 # 3. Konfigurasi
 cp .env.example .env               # isi token platform kalau mau (opsional untuk console)
@@ -63,11 +101,12 @@ basa run
 Saat pertama jalan, bot otomatis menjalankan migrasi DB & seed data. Coba:
 
 ```
-/kata batak      → kata Batak Toba acak
-/frase sunda     → frasa Sunda harian
-/grammar jawa    → aturan grammar Jawa
-/kuis jawa       → kuis interaktif 5 soal (jawab 1-3 atau ketik 'stop')
-/progres         → statistik belajarmu
+/kata batak          → kata Batak Toba acak
+/frase sunda         → frasa Sunda harian
+/percakapan jawa     → dialog Jawa 3–5 tanya-jawab dari Gemini/Bynara
+/grammar jawa        → aturan grammar Jawa
+/kuis jawa           → kuis interaktif 5 soal (jawab 1-3 atau ketik 'stop')
+/progres             → statistik belajarmu
 ```
 
 > Demo transkrip asli: [docs/DEMO.md](docs/DEMO.md)
@@ -93,18 +132,26 @@ Detail setup di [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) dan [docs/DATA_SOURCES.
 
 ## 🧪 Testing
 
+Aktifkan virtual environment terlebih dahulu, lalu jalankan:
+
 ```bash
-pytest                 # seluruh suite (core, db, router, ketiga adapter)
+source .venv/bin/activate
+PYTHONPATH=src pytest
 ```
+
+Suite mencakup core, database, router, ketiga adapter platform, adapter LLM,
+parser response Bynara, serta simulasi fallback primary → backup tanpa
+menghabiskan quota provider. Test tidak membutuhkan API key nyata.
 
 ## 📁 Struktur
 
 ```
 src/basa/
 ├── core/          # ⭐ logika inti (bebas platform): router, messages, services/
-│   └── services/  # vocabulary, conversation, grammar, quiz
+│   └── services/  # vocabulary, dialogue/RAG, conversation, grammar, quiz
 ├── db/            # engine, models (8 tabel), repositories (repository pattern)
 ├── platforms/     # ⭐ adapter tipis: console, telegram/, whatsapp/
+├── llm/           # adapter mock, Gemini, Bynara, dan fallback chain
 ├── data/          # loader data → seed dari JSON
 ├── config.py      # pydantic-settings (baca .env)
 └── main.py        # entrypoint: pilih adapter dari PLATFORM=
