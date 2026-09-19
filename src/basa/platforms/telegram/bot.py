@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Message, Update
+from telegram import BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, Message, Update
 from telegram.constants import ParseMode
 from telegram.error import TelegramError
 from telegram.ext import Application, CallbackQueryHandler, ContextTypes, MessageHandler, filters
@@ -30,6 +30,21 @@ class TelegramAdapter(PlatformAdapter):
 
     platform_name = "telegram"
 
+    _MENU_COMMANDS = [
+        BotCommand("start", "Mulai belajar"),
+        BotCommand("kata", "Kata acak bahasa daerah"),
+        BotCommand("kuis", "Kuis interaktif 5 soal"),
+        BotCommand("bahasa", "Daftar bahasa tersedia"),
+        BotCommand("frase", "Frasa percakapan harian"),
+        BotCommand("grammar", "Aturan grammar dasar"),
+        BotCommand("obrolan", "Latihan percakapan dengan tutor AI"),
+        BotCommand("percakapan", "Dialog tanya-jawab 2 orang"),
+        BotCommand("review", "Review kata yang jatuh tempo"),
+        BotCommand("tantangan", "Tantangan belajar hari ini"),
+        BotCommand("progres", "Statistik belajarmu"),
+        BotCommand("help", "Bantuan & daftar perintah"),
+    ]
+
     def __init__(self, token: str, router: Router | None = None) -> None:
         super().__init__(router=router)
         if not token:
@@ -42,12 +57,22 @@ class TelegramAdapter(PlatformAdapter):
     # --- pembangunan aplikasi ---
 
     def _build_app(self) -> Application:
-        app = Application.builder().token(self.token).build()
+        app = (
+            Application.builder()
+            .token(self.token)
+            .post_init(self._post_init)
+            .build()
+        )
         # Semua teks (termasuk /command) diteruskan ke Router inti — tidak ada
         # logika command terpisah di adapter.
         app.add_handler(MessageHandler(filters.TEXT, self._on_message))
         app.add_handler(CallbackQueryHandler(self._on_callback))
         return app
+
+    @staticmethod
+    async def _post_init(app: Application) -> None:
+        """Dijalankan sekali setelah Application terinisialisasi."""
+        await app.bot.set_my_commands(TelegramAdapter._MENU_COMMANDS)
 
     # --- handler ---
 
