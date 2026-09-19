@@ -53,7 +53,6 @@ class GeminiLLMClient(LLMClient):
     ) -> str:
         """Kirim prompt ke Gemini, kembalikan teks balasan (dengan retry 429)."""
         url = f"{_API_BASE}/models/{self.model}:generateContent"
-        params = {"key": self._api_key}
         payload: dict[str, Any] = {
             "contents": [{"role": "user", "parts": [{"text": user}]}],
             "generationConfig": {
@@ -67,7 +66,12 @@ class GeminiLLMClient(LLMClient):
         last_err: Exception | None = None
         for attempt, delay in enumerate(_RETRY_BACKOFFS):
             try:
-                resp = self._client.post(url, params=params, json=payload)
+                # Header mencegah API key muncul di URL/log HTTP.
+                resp = self._client.post(
+                    url,
+                    headers={"x-goog-api-key": self._api_key},
+                    json=payload,
+                )
             except httpx.HTTPError as exc:  # gangguan jaringan transient → retry
                 last_err = exc
                 log.warning(

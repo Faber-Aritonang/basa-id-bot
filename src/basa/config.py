@@ -36,11 +36,19 @@ class Settings(BaseSettings):
     whatsapp_webhook_port: int = 8080
 
     # LLM (fitur /obrolan) — default mock (jalan tanpa API key).
-    # Provider "gemini" pakai Google AI Studio free tier; key gratis di
-    # https://aistudio.google.com (tanpa kartu kredit).
+    # Provider "gemini" memakai Google AI Studio; provider "bynara" memakai
+    # endpoint OpenAI-compatible NaraRouter (token pay-as-you-go).
     llm_provider: str = "mock"
     llm_api_key: str = ""
     llm_model: str = "gemini-flash-lite-latest"
+    llm_base_url: str = "https://router.bynara.id/v1"
+
+    # Provider cadangan — bila key diisi, primary otomatis dicoba lebih dulu
+    # lalu request pindah ke fallback saat primary error/quota/rate-limit.
+    llm_fallback_provider: str = "bynara"
+    llm_fallback_api_key: str = ""
+    llm_fallback_model: str = "agnes-2.5-flash"
+    llm_fallback_base_url: str = "https://router.bynara.id/v1"
 
     # Logging
     log_level: str = "INFO"
@@ -53,7 +61,7 @@ class Settings(BaseSettings):
     @property
     def supported_llm_providers(self) -> list[str]:
         """Daftar provider LLM yang sudah ada adapter-nya."""
-        return ["mock", "gemini"]
+        return ["mock", "gemini", "bynara"]
 
 
 @lru_cache
