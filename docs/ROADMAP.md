@@ -1,66 +1,174 @@
 # Basa.id — Roadmap Implementasi
 
-> Alur kerja bertahap. Setiap langkah berhenti untuk persetujuan user sebelum lanjut.
+> Status roadmap ini mencerminkan kondisi repository `main` saat ini. Tahap yang
+> berstatus **SELESAI** sudah tersedia di kode; item **PENDING** membutuhkan
+> kredensial atau verifikasi live dari environment deployment.
 
-## ✅ Langkah 1 — Rencana Arsitektur (SELESAI)
-- Dokumen arsitektur, roadmap, riset data (folder `docs/`)
-- `.gitignore` + `README.md` awal
-- **Gate**: user menyetujui arsitektur & pilihan stack
+## ✅ Langkah 1 — Rencana Arsitektur
 
-## ✅ Langkah 2 — Setup Project (SELESAI)
-- `git init` + branch `main`
-- `pyproject.toml` (dependencies: sqlalchemy, alembic, pydantic-settings, python-telegram-bot, pytest, typer)
-- `src/basa/config.py` (pydantic-settings) + `.env.example`
-- Skeleton folder sesuai [ARCHITECTURE.md](ARCHITECTURE.md)
+- Dokumen arsitektur, roadmap, riset data di folder `docs/`
+- `.gitignore` dan README awal
+- Pola *ports & adapters*: satu core untuk banyak platform
 
-## ✅ Langkah 3 — Layer Database (SELESAI)
-- `db/engine.py`, `db/models.py` (5 tabel: users, languages, words, user_word_progress, quiz_results)
-- Alembic init + migration pertama (`d28290b68c50`)
-- `db/repositories.py` (repository pattern)
-- **Gate**: pytest untuk koneksi DB SQLite jalan ✅
+## ✅ Langkah 2 — Setup Project
 
-## ✅ Langkah 4 — Modul Kosakata + Data Batak Toba (SELESAI)
-- Dataset `data/batak_toba/basic_100.json` (sample kurasi manual 103 kata)
-- `core/messages.py` (UserMessage, BotReply, Button)
-- `core/services/vocabulary.py` + `core/router.py`
-- `data/loaders.py` (seed: JSON → DB)
-- **Gate**: unit test vocab + seed berhasil ✅ (46 test)
+- Branch utama `main`
+- `pyproject.toml` dan konfigurasi Python 3.11+
+- `src/basa/config.py` berbasis `pydantic-settings`
+- Template konfigurasi `.env.example`
+- CLI `basa`
 
-## ✅ Langkah 5 — Console Simulator (SELESAI)
-- `platforms/base.py` (ABC PlatformAdapter) + `platforms/console.py`
-- `platforms/__init__.py` (`get_adapter` factory)
-- `main.py` + CLI `run` (auto-migrate + auto-seed jika DB kosong)
-- Demo fitur vocab via terminal
-- **Gate**: bot berfungsi penuh di terminal ✅
+## ✅ Langkah 3 — Layer Database
 
-## ✅ Langkah 6 — Platform Telegram (SELESAI)
-- `platforms/telegram/bot.py` (python-telegram-bot v21, polling, inline keyboard, fallback markdown)
-- `get_adapter("telegram")` + `supported_platforms` + token via `.env`
-- Router menerima `/kata@BotName`
-- Fix logging startup (fileConfig Alembic tidak mematikan logger aplikasi)
-- **Gate**: `/kata` jalan live di Telegram ✅ — user platform `telegram` tercatat di DB beserta progres & kuis
-  - Verifikasi: user `telegram` dibuat, `/kuasai` → status `mastered`, `/kuis` → `quiz_results` terisi
+- SQLAlchemy 2.0 dan Alembic
+- Model user, bahasa, kosakata, progres, kuis, frasa, grammar, dan sesi kuis
+- Repository pattern di `src/basa/db/repositories.py`
+- SQLite untuk lokal dan dukungan PostgreSQL untuk deployment
+- Migrasi database idempoten saat aplikasi dijalankan
 
-## ⏭️ Langkah 7 — Platform WhatsApp (kode selesai; live test menunggu kredensial Meta)
-- Provider dipilih user: **Meta WhatsApp Cloud API**
-- `platforms/whatsapp/bot.py` (webhook stdlib + Graph API, interactive buttons, tanpa markdown)
-- `get_adapter("whatsapp")` + kredensial via `.env` (`WHATSAPP_API_TOKEN`, `PHONE_NUMBER_ID`, `VERIFY_TOKEN`)
-- Ambil kredensial dari Meta for Developers → isi `.env` → `PLATFORM=whatsapp basa run` (+ ngrok)
-- **Gate**: command yang sama jalan di WhatsApp tanpa ubah core — MENUNGGU kredensial dari user
+## ✅ Langkah 4 — Kosakata dan Data Batak Toba
 
-## ⏭️ Langkah 8 — Fitur Lanjutan (percakapan, grammar & kuis interaktif selesai)
-- ✅ **Percakapan harian — fitur #2 (SELESAI)**: tabel `phrases` + migrasi, `PhraseRepository`, `ConversationService`, command `/frase <bahasa>`, data frasa kurasi (batak/jawa/sunda), loader diperluas (dukung field `phrases`)
-- ✅ **Grammar dasar — fitur #3 (SELESAI)**: tabel `grammar_rules` + migrasi, `GrammarRepository`, `GrammarService`, command `/grammar <bahasa>`, data grammar kurasi (batak/jawa/sunda), loader dukung field `grammar`
-- ✅ **Kuis interaktif — fitur #4 (SELESAI)**: tabel `quiz_sessions` + migrasi, `QuizSessionRepository`, `QuizService` (start/answer/stop), command `/kuis <bahasa>` multi-pesan, 3 opsi jawaban (konsisten dengan batas tombol WhatsApp), skor asli tercatat ke `quiz_results` (bukan lagi placeholder 0), jawaban via tombol ATAU angka di Telegram/WhatsApp/console
-- ✅ `/progres` — sudah jalan sejak Langkah 4
-- **Gate**: semua fitur berfungsi di console + Telegram
+- Dataset Batak Toba kurasi manual
+- `VocabularyService` dan command `/kata <bahasa>`
+- Progres kosakata per user dan platform
+- Loader data JSON → database
 
-## ✅ Langkah 9 — Dokumentasi Portofolio & Finalisasi (SELESAI)
-- ✅ Import data Kaikki Jawa/Sunda — `jawa.json` (3.523 kata) & `sunda.json` (3.262 kata) via `scripts/import_kaikki.py`
-- ✅ README final profesional (nama + tagline + fitur + quick start + struktur + atribusi) — tautan demo
-- ✅ `docs/DEMO.md` — transkrip demo console asli
-- ✅ `docs/DEPLOYMENT.md` — Postgres (`DATABASE_URL` swap + extra `postgres`), hosting Railway/Render, WhatsApp webhook, Docker
-- ✅ `Dockerfile` + `.dockerignore` + `docker-compose.yml` (Postgres lokal) — build terverifikasi
-- ✅ `LICENSE` (MIT) + `.gitignore` diperluas (AppImage Freebuff, raw `*.jsonl`)
-- ✅ Data & atribusi CC BY-SA (Kaikki/Wiktionary) dicatat di README + `data/README.md`
-- **Gate**: repo siap di-publish ke GitHub — TINGGAL commit & push (belum ada commit sama sekali)
+## ✅ Langkah 5 — Console Simulator
+
+- Adapter console untuk development dan demo tanpa token platform
+- Auto-migrate dan auto-seed database lokal
+- Command interaktif untuk menguji fitur core
+
+## ✅ Langkah 6 — Platform Telegram
+
+- Adapter `python-telegram-bot` v21
+- Polling, inline keyboard, dan fallback tampilan teks
+- Dukungan `/kata@BotName`
+- Pencatatan user, progres, dan hasil kuis per platform
+- Command utama dapat diuji melalui Telegram
+
+## 🟡 Langkah 7 — Platform WhatsApp
+
+**Status kode: SELESAI — status live: PENDING kredensial Meta dan webhook publik.**
+
+- Adapter Meta WhatsApp Cloud API
+- Webhook verification dan validasi signature
+- Graph API untuk pengiriman pesan
+- Tombol interaktif dan format tanpa Markdown
+- Konfigurasi melalui `WHATSAPP_API_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`,
+  `WHATSAPP_VERIFY_TOKEN`, dan `WHATSAPP_WEBHOOK_PORT`
+
+Verifikasi yang masih diperlukan:
+
+- Mendaftarkan webhook publik di Meta for Developers
+- Menguji pesan masuk dan balasan keluar secara live
+- Memastikan tombol interaktif bekerja pada akun WhatsApp produksi
+
+## ✅ Langkah 8 — Fitur Pembelajaran Lanjutan
+
+### Percakapan statis
+
+- Command `/frase <bahasa>`
+- Tabel `phrases`, repository, service, dan data frasa kurasi
+- Konteks frasa seperti sapaan, makanan, dan perjalanan
+
+### Grammar dasar
+
+- Command `/grammar <bahasa>`
+- Tabel `grammar_rules`, repository, service, dan data grammar kurasi
+- Contoh partikel, tingkat tutur, negasi, dan aturan dasar lainnya
+
+### Kuis interaktif
+
+- Command `/kuis <bahasa>`
+- Lima soal pilihan ganda dengan tiga opsi
+- Jawaban melalui tombol atau angka
+- Dukungan multi-pesan dan command `stop`
+- Skor tersimpan ke `quiz_results`
+- Sesi kuis tersimpan melalui `quiz_sessions`
+
+### Progres belajar
+
+- Command `/progres`
+- Statistik kosakata dilihat/dikuasai dan skor kuis per user/platform
+
+## ✅ Langkah 9 — Percakapan LLM berbasis RAG
+
+- Command `/percakapan <bahasa>`
+- `DialogueService` mengambil kosakata, frasa, dan grammar dari database
+- Prompt Gemini mewajibkan dialog 3–5 pasangan tanya-jawab
+- Tema harian dipilih secara acak
+- Format output mencakup `Tema:` dan `Materi:`
+- Prompt menjaga dialog tetap grounded pada CONTEXT database
+- Dukungan bahasa Batak, Jawa, dan Sunda
+- Adapter mock tersedia untuk demo dan unit test tanpa API
+
+## ✅ Langkah 10 — Provider LLM dan Fallback
+
+- `GeminiLLMClient` melalui REST API Google AI Studio
+- `BynaraLLMClient` melalui endpoint OpenAI-compatible NaraRouter
+- Model fallback: `agnes-2.5-flash`
+- `FallbackLLMClient` mencoba Gemini terlebih dahulu, lalu Bynara ketika primary
+  gagal karena quota, rate limit, timeout, atau error provider
+- API key Gemini dikirim melalui header `x-goog-api-key`, bukan query URL
+- Konfigurasi terpisah untuk primary dan fallback:
+
+  ```env
+  LLM_PROVIDER=gemini
+  LLM_API_KEY=TOKEN_GEMINI
+  LLM_MODEL=gemini-flash-lite-latest
+
+  LLM_FALLBACK_PROVIDER=bynara
+  LLM_FALLBACK_API_KEY=TOKEN_BYNARA
+  LLM_FALLBACK_MODEL=agnes-2.5-flash
+  LLM_FALLBACK_BASE_URL=https://router.bynara.id/v1
+  ```
+
+- Test fallback menggunakan primary mock/error dan tidak menghabiskan quota
+- Verifikasi Bynara live berhasil dengan response HTTP 200
+- Verifikasi quota Gemini nyata belum dilakukan secara sengaja agar tidak
+  menghabiskan quota; simulasi error primary digunakan untuk pengujian alur
+
+## ✅ Langkah 11 — Data, Dokumentasi, dan Packaging
+
+- Import data Kaikki Jawa dan Sunda
+- Atribusi Wiktionary/Kaikki dengan lisensi CC BY-SA 3.0
+- README mencakup fitur LLM dan konfigurasi fallback
+- `docs/DEMO.md`, `docs/DATA_SOURCES.md`, dan `docs/DEPLOYMENT.md`
+- `Dockerfile`, `.dockerignore`, `docker-compose.yml`, dan `render.yaml`
+- LICENSE MIT
+- `.env` diabaikan Git; token tidak boleh dimasukkan ke repository
+
+## 🟡 Langkah 12 — Deployment dan Verifikasi Produksi
+
+Prioritas berikutnya:
+
+1. Menjalankan full test suite di virtual environment:
+
+   ```bash
+   python -m pip install -e '.[dev]'
+   PYTHONPATH=src pytest
+   ```
+
+2. Memperbaiki `LLM_MODEL` agar memakai model Gemini yang valid dan memastikan
+   `LLM_FALLBACK_MODEL=agnes-2.5-flash` hanya dipakai oleh Bynara.
+3. Menguji output fallback dengan validator agar dialog selalu berakhir pada
+   baris `B`, memiliki 3–5 pasangan dialog, dan menyertakan `Materi:`.
+4. Deploy bot dengan PostgreSQL dan environment secret di Railway/Render.
+5. Melakukan live test Telegram setelah deployment.
+6. Melengkapi live test WhatsApp dengan webhook Meta.
+7. Menambahkan observability: provider aktif, alasan fallback, latency, dan
+   error rate tanpa mencatat API key atau isi secret.
+
+## Status ringkas
+
+| Area | Status |
+|---|---|
+| Core, database, migrasi, dan seed | ✅ Selesai |
+| Console dan Telegram | ✅ Selesai |
+| WhatsApp adapter | 🟡 Kode selesai, live test pending |
+| Fitur kosakata, frasa, grammar, kuis, progres | ✅ Selesai |
+| Percakapan LLM + RAG | ✅ Selesai |
+| Gemini primary + Bynara fallback | ✅ Implementasi selesai |
+| Full test di environment lokal saat ini | 🟡 Menunggu dependency Python |
+| Deployment produksi dan verifikasi live | 🟡 Pending |
