@@ -82,7 +82,10 @@ def test_on_message_routes_to_core(adapter):
     sent = update.message.replies[0]
     assert "mangan" in sent["text"]
     assert sent["parse_mode"] == ParseMode.MARKDOWN
-    assert sent["reply_markup"] is None
+    # Sekarang selalu ada menu keyboard
+    assert sent["reply_markup"] is not None
+    # Menu utama ada 7 tombol
+    assert len(sent["reply_markup"].inline_keyboard) == 7
 
 
 def test_on_message_without_text_ignored(adapter):
@@ -162,7 +165,7 @@ def test_callback_edit_passes_keyboard_when_reply_has_buttons(adapter):
 
 
 def test_callback_edit_clears_keyboard_when_no_buttons(adapter):
-    """Hasil akhir kuis (tanpa tombol) → keyboard lama dibersihkan."""
+    """Hasil akhir kuis (tanpa tombol) → tetap tampilkan menu utama."""
     class FakeQuery:
         data = "2"
         edited: dict | None = None
@@ -184,8 +187,8 @@ def test_callback_edit_clears_keyboard_when_no_buttons(adapter):
     edited = update.callback_query.edited
     assert edited is not None
     assert edited["reply_markup"] is not None
-    # PTB menyimpan keyboard sebagai tuple — kosong berarti keyboard dibersihkan
-    assert len(edited["reply_markup"].inline_keyboard) == 0
+    # Sekarang tetap tampilkan menu utama (7 tombol)
+    assert len(edited["reply_markup"].inline_keyboard) == 7
 
 
 def test_get_adapter_telegram_requires_token(monkeypatch):

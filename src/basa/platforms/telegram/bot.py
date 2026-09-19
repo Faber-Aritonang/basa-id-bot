@@ -13,7 +13,13 @@ from __future__ import annotations
 
 import logging
 
-from telegram import BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, Message, Update
+from telegram import (
+    BotCommand,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+    Update,
+)
 from telegram.constants import ParseMode
 from telegram.error import TelegramError
 from telegram.ext import Application, CallbackQueryHandler, ContextTypes, MessageHandler, filters
@@ -44,6 +50,19 @@ class TelegramAdapter(PlatformAdapter):
         BotCommand("progres", "Statistik belajarmu"),
         BotCommand("help", "Bantuan & daftar perintah"),
     ]
+
+    # Menu utama yang selalu ditampilkan di setiap balasan
+    _MAIN_MENU = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton("📚 /kata", callback_data="/kata")],
+            [InlineKeyboardButton("📝 /kuis", callback_data="/kuis")],
+            [InlineKeyboardButton("🌐 /bahasa", callback_data="/bahasa")],
+            [InlineKeyboardButton("📖 /grammar", callback_data="/grammar")],
+            [InlineKeyboardButton("🗣️ /percakapan", callback_data="/percakapan")],
+            [InlineKeyboardButton("📊 /progres", callback_data="/progres")],
+            [InlineKeyboardButton("❓ /help", callback_data="/help")],
+        ]
+    )
 
     def __init__(self, token: str, router: Router | None = None) -> None:
         super().__init__(router=router)
@@ -93,22 +112,29 @@ class TelegramAdapter(PlatformAdapter):
         # Callback diproses seperti pesan teks — callback_data kuis berupa angka
         # jawaban ("1"/"2"/"3") yang diteruskan ke core Router seperti biasa.
         reply = self.handle_text(query.data, user_id)
-        # Perbarui juga tombolnya: soal berikutnya membawa keyboard baru, dan
-        # pesan hasil akhir tidak punya tombol → keyboard lama dihapus.
-        keyboard = self._keyboard(reply)
-        if not reply.buttons:
-            keyboard = InlineKeyboardMarkup([])  # kosongkan keyboard lama
+
+        # Bangun keyboard sesuai reply
+        keyboard = self._build_keyboard(reply.buttons)
+
         try:
             await query.edit_message_text(
-                reply.text, parse_mode=ParseMode.MARKDOWN, reply_markup=keyboard
+                reply.text,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=keyboard,
             )
         except TelegramError:
-            await query.edit_message_text(reply.text, reply_markup=keyboard)
+            # Jika gagal edit, kirim pesan baru
+            if query.message is not None:
+                await query.message.reply_text(
+                    reply.text,
+                    reply_markup=keyboard,
+                )
 
     # --- kirim balasan ---
 
     async def _send(self, message: Message, reply: BotReply) -> None:
-        keyboard = self._keyboard(reply)
+        """Kirim balasan dengan inline keyboard menu utama."""
+        keyboard = self._build_keyboard(reply.buttons)
         try:
             await message.reply_text(
                 reply.text,
@@ -124,13 +150,19 @@ class TelegramAdapter(PlatformAdapter):
                 reply_markup=keyboard,
             )
 
-    @staticmethod
-    def _keyboard(reply: BotReply) -> InlineKeyboardMarkup | None:
-        """Ubah `reply.buttons` → inline keyboard Telegram (None jika kosong)."""
-        if not reply.buttons:
-            return None
-        row = [InlineKeyboardButton(b.text, callback_data=b.callback_data) for b in reply.buttons]
-        return InlineKeyboardMarkup([row])
+    def _build_keyboard(self, buttons: list) -> InlineKeyboardMarkup:
+        """Bangun inline keyboard: button khusus di atas, menu utama di bawah."""
+        # Menu utama selalu ada di bagian bawah
+        if not buttons:
+            return self._MAIN_MENU
+
+        # Buat baris pertama untuk button khusus (kuis pilihan ganda)
+        custom_row = [InlineKeyboardButton(b.text, callback_data=b.callback_data) for b in buttons]
+
+        # Gabungkan: button khusus + menu utama
+        # Konversi tuple ke list untuk operasi penjumlahan
+        main_keyboard = list(self._MAIN_MENU.inline_keyboard)
+        return InlineKeyboardMarkup(inline_keyboard=[custom_row] + main_keyboard)
 
     # --- lifecycle ---
 
